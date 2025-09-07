@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Surprise — A Small Sorry</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --fg: #f6f7fb;
+      --muted: #cbd6e0;
+      --accent: #ff6b9a;
+      --glass: rgba(0, 0, 0, 0.45);
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+      background: #00111a;
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    /* Scene */
+    .scene {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: linear-gradient(180deg, #001826 0%, #00111a 60%, #020509 100%);
+    }
+    .black-rainbow {
+      position: absolute;
+      left: 50%; top: 18%;
+      width: 1800px; height: 900px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center,
+        rgba(255, 255, 255, 0.02) 0%,
+        rgba(0, 0, 0, 0.7) 40%,
+        rgba(0, 0, 0, 0.95) 100%);
+      filter: blur(20px) saturate(0.8);
+      mix-blend-mode: overlay;
+      opacity: 0.6;
+      z-index: 0;
+    }
+    .rainbow-arcs {
+      position: absolute;
+      left: 50%; top: 18%;
+      transform: translateX(-50%);
+      width: 1400px; height: 700px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.9;
+      filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.6));
+    }
+    .mountains {
+      position: absolute;
+      left: 50%; bottom: 12%;
+      width: 150%; height: 38%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #032b3f 0%, #052734 60%, #031b25 100%);
+      clip-path: polygon(0 100%, 10% 40%, 20% 70%, 30% 30%, 40% 60%, 50% 20%,
+        60% 50%, 70% 25%, 80% 60%, 90% 35%, 100% 100%);
+      z-index: 1;
+      filter: blur(0.6px);
+      opacity: 0.98;
+    }
+    .sea {
+      position: absolute;
+      left: 0; bottom: 0;
+      width: 100%; height: 22%;
+      background: linear-gradient(to top, #001428 10%, #002b3f 80%);
+      z-index: 1;
+      box-shadow: inset 0 40px 80px rgba(0, 0, 0, 0.6);
+      animation: seaMove 6s ease-in-out infinite alternate;
+    }
+    @keyframes seaMove {
+      from { transform: translateY(4px); }
+      to { transform: translateY(-4px); }
+    }
+    .stars {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .star {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, #fff, #dfeffd);
+      opacity: 0.9;
+      animation: tw 2.5s linear infinite alternate;
+    }
+    @keyframes tw {
+      from { transform: scale(0.6); opacity: 0.3; }
+      to   { transform: scale(1.2); opacity: 1; }
+    }
+    /* Overlay Popup */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.7));
+      z-index: 12;
+      animation: overlayIn 0.7s ease;
+    }
+    @keyframes overlayIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    .card {
+      width: min(420px, 92vw);
+      background: rgba(255, 255, 255, 0.98);
+      color: #111;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      animation: cardPop 0.9s cubic-bezier(0.2, 0.9, 0.2, 1);
+    }
+    @keyframes cardPop {
+      0% { transform: scale(0.85); opacity: 0; }
+      60% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .card h2 { margin: 0 0 12px; font-size: 1.2rem; color: var(--accent); }
+    .btn {
+      background: linear-gradient(90deg, #ff6b9a, #ff4b3c);
+      color: white;
+      border: 0;
+      padding: 12px 18px;
+      border-radius: 26px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 10px 30px rgba(255, 80, 120, 0.18);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 80, 120, 0.6); }
+      70% { box-shadow: 0 0 0 20px rgba(255, 80, 120, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 80, 120, 0); }
+    }
+    /* Cartoon + Speech */
+    .cartoon-wrap {
+      position: relative;
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      transition: all 0.9s cubic-bezier(0.2, 0.9, 0.2, 1);
+    }
+    .cartoon-wrap.show {
+      opacity: 1; transform: translateY(0) scale(1);
+    }
+    .cartoon {
+      width: 220px; height: 300px;
+      display: block;
+      filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.5));
+      animation: bounce 3s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+    .speech {
+      width: 90%;
+      max-width: 480px;
+      margin-top: 8px;
+      text-align: center;
+      color: var(--fg);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      padding: 14px 18px;
+      border-radius: 14px;
+      box-shadow: 0 0 20px rgba(255, 107, 154, 0.3);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.7s ease;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .speech.show { opacity: 1; transform: translateY(0); animation: glow 2.5s ease-in-out infinite; }
+    @keyframes glow {
+      0%,100% { box-shadow: 0 0 20px rgba(255,107,154,0.3); }
+      50% { box-shadow: 0 0 35px rgba(255,107,154,0.6); }
+    }
+    .messageBox {
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      text-align: center;
+    }
+    .fadeInChar { opacity: 0; animation: fadeInChar 0.4s forwards; }
+    @keyframes fadeInChar { to { opacity: 1; } }
+    .caret {
+      display: inline-block;
+      width: 8px; height: 18px;
+      background: linear-gradient(90deg, #fff, #cfe8ff);
+      margin-left: 6px;
+      animation: blink 0.8s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .heart {
+      position: absolute;
+      font-size: 20px;
+      color: #ff6b9a;
+      animation: floatUp 5s linear forwards;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-200px); opacity: 0; }
+    }
+    @keyframes glowText {
+      0% { text-shadow: 0 0 6px #ff6b9a, 0 0 12px #ff4b3c; }
+      50% { text-shadow: 0 0 12px #ff6b9a, 0 0 24px #ff4b3c; }
+      100% { text-shadow: 0 0 6px #ff6b9a, 0 0 12px #ff4b3c; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="black-rainbow"></div>
+    <svg class="rainbow-arcs" viewBox="0 0 1400 700">
+      <g fill="none" stroke-linecap="round" stroke-width="34" stroke-opacity="0.85">
+        <path stroke="#0a0a0a" d="M50 650 C250 150 1150 150 1350 650"/>
+        <path stroke="#1a1a1a" d="M140 650 C320 220 1080 220 1260 650" stroke-width="28"/>
+        <path stroke="#393939" d="M240 650 C380 290 1020 290 1160 650" stroke-width="22"/>
+        <path stroke="#5a5a5a" d="M310 650 C440 360 950 360 1080 650" stroke-width="16"/>
+      </g>
+    </svg>
+    <div class="stars" id="stars"></div>
+    <div class="mountains"></div>
+    <div class="sea"></div>
+  </div>
+
+  <!-- Popup -->
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h2>For you — my small efforts...</h2>
+      <p>I respected your Words. — no messages, no calls, and professional at work.</p>
+      <p class="subtle">So I made this little thing — open it if you'd like.</p>
+      <div style="margin-top:14px;"><button class="btn" id="openBtn">can you please open.</button></div>
+    </div>
+  </div>
+
+  <!-- Cartoon + Speech -->
+  <main style="position:relative;z-index:6;display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:36px;">
+    <div class="cartoon-wrap" id="cartoonWrap">
+      <svg class="cartoon" viewBox="0 0 220 300">
+        <circle cx="110" cy="70" r="40" fill="#ffd6ba"/>
+        <path d="M70 60 Q110 -10 150 60 Q150 80 110 90 Q70 80 70 60 Z" fill="#24191a"/>
+        <g transform="translate(92,60)">
+          <ellipse cx="-6" cy="3" rx="6" ry="4" fill="#111"/>
+          <ellipse cx="18" cy="3" rx="6" ry="4" fill="#111"/>
+          <circle cx="-7" cy="12" r="6" fill="#ffb6c7"/>
+          <circle cx="21" cy="12" r="6" fill="#ffb6c7"/>
+        </g>
+        <path d="M95 80 q15 12 30 0" stroke="#7a3426" stroke-width="3" fill="none"/>
+      </svg>
+      <div class="speech" id="speechBubble">
+        <div class="messageBox" id="messageBox"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Background Music -->
+  <audio id="bgMusic" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    const lines = [
+      "Pooja I know you said no social media... 🌸",
+      "No calls... no texts... 📵",
+      "And to stay professional at work 💼",
+      "So here I am, using this page... just to say... 💌",
+      "I'm truly sorry ❤️",
+      "Pooja, my heart misses you more than words can say. I know I’ve hurt you, but I promise I will truly understand you in the future. Please don’t let this be the last time we talk—end this break and let 's speak.🌟",
+      "Will you forgive me? pleaseeeeeee 🤗",
+	  "",
+    ];
+    const typingSpeed = 28;
+
+    function makeStars() {
+      const stars = document.getElementById('stars');
+      for (let i = 0; i < 110; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 70 + '%';
+        s.style.opacity = 0.35 + Math.random() * 0.7;
+        s.style.animationDuration = (1.2 + Math.random() * 2.4) + 's';
+        stars.appendChild(s);
+      }
+    }
+    makeStars();
+
+    const openBtn = document.getElementById('openBtn');
+    const overlay = document.getElementById('overlay');
+    const cartoonWrap = document.getElementById('cartoonWrap');
+    const speech = document.getElementById('speechBubble');
+    const messageBox = document.getElementById('messageBox');
+    const bgMusic = document.getElementById('bgMusic');
+
+    openBtn.addEventListener('click', async function () {
+      overlay.style.transition = 'opacity .6s ease';
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 650);
+
+      // music fade in
+      bgMusic.volume = 0.0;
+      bgMusic.play().catch(() => {});
+      let vol = 0;
+      const volInterval = setInterval(() => {
+        vol += 0.03;
+        if (vol >= 0.6) { vol = 0.6; clearInterval(volInterval); }
+        bgMusic.volume = vol;
+      }, 150);
+
+      // show cartoon + typing
+      cartoonWrap.classList.add('show');
+      setTimeout(() => speech.classList.add('show'), 1000);
+
+      await sleep(1200);
+      await typeLinesSequential(lines, messageBox, typingSpeed);
+
+      const caret = document.createElement('span');
+      caret.className = 'caret';
+      messageBox.appendChild(caret);
+      setTimeout(() => caret.remove(), 7000);
+
+      setInterval(() => {
+        const h = document.createElement("div");
+        h.className = "heart";
+        h.innerHTML = "❤️";
+        h.style.left = Math.random() * window.innerWidth + "px";
+        h.style.bottom = "0px";
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 5000);
+      }, 1000);
+
+      startGifCountdown();
+    });
+
+    function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+    async function typeLinesSequential(linesArr, container, speed) {
+      container.textContent = "";
+      for (let i = 0; i < linesArr.length; i++) {
+        await typeLine(container, linesArr[i], speed);
+        if (i < linesArr.length - 1) container.appendChild(document.createTextNode("\n\n"));
+        await sleep(500);
+      }
+    }
+
+    function typeLine(container, text, speed) {
+      return new Promise(resolve => {
+        let i = 0;
+        function step() {
+          if (i < text.length) {
+            const span = document.createElement("span");
+            span.textContent = text[i];
+            span.classList.add("fadeInChar");
+            container.appendChild(span);
+            i++;
+            setTimeout(step, speed);
+          } else resolve();
+        }
+        step();
+      });
+    }
+
+    function startGifCountdown() {
+  // redirect to sit-up page after 15s
+  setTimeout(() => {
+    // Clear previous overlay
+    overlay.style.display = 'none';
+
+    // Sit-up overlay
+    const situpOverlay = document.createElement('div');
+    situpOverlay.style.position = 'fixed';
+    situpOverlay.style.inset = '0';
+    situpOverlay.style.background = 'linear-gradient(#001f33, #111)';
+    situpOverlay.style.display = 'flex';
+    situpOverlay.style.flexDirection = 'column';
+    situpOverlay.style.alignItems = 'center';
+    situpOverlay.style.justifyContent = 'center';
+    situpOverlay.style.zIndex = '20';
+    situpOverlay.style.color = '#ff6b9a';
+    situpOverlay.style.fontFamily = 'Segoe UI, sans-serif';
+    document.body.appendChild(situpOverlay);
+
+    // Romantic + funny line
+    const line = document.createElement('h2');
+    line.textContent = "saru hu sit up kri dav......tu manis nai tya sudhi kris...😢 ";
+    line.style.marginBottom = '20px';
+    line.style.textAlign = 'center';
+    line.style.fontSize = '1.5rem';
+    situpOverlay.appendChild(line);
+
+    // Sit-up GIF
+    const gif = document.createElement('img');
+    gif.src = 'assets/sorry-friend.gif'; // local GIF
+    gif.style.maxWidth = '50%';
+    gif.style.borderRadius = '12px';
+    gif.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
+    situpOverlay.appendChild(gif);
+
+    // Sit-up counter
+    const counter = document.createElement('h3');
+    counter.style.marginTop = '20px';
+    counter.style.fontSize = '1.3rem';
+    counter.textContent = "Sit-ups: 0 / 100";
+    situpOverlay.appendChild(counter);
+
+    let count = 0;
+
+    const startSitUps = () => {
+      const interval = setInterval(() => {
+        count++;
+        counter.textContent = `Sit-ups: ${count} / 100`;
+
+        // floating hearts
+        const h = document.createElement("div");
+        h.className = "heart";
+        h.innerHTML = "❤️";
+        h.style.left = Math.random() * window.innerWidth + "px";
+        h.style.bottom = "0px";
+        h.style.fontSize = (16 + Math.random() * 20) + "px";
+        h.style.position = "absolute";
+        h.style.pointerEvents = "none";
+        h.style.animation = "floatUp 4s linear forwards";
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 4000);
+
+        // Pause at 20 sit-ups
+      if (count === 20) {
+    clearInterval(interval);
+
+    // First sad-romantic line
+    const promptBox = document.createElement("h3");
+    promptBox.textContent = "Haju pan nai mane ...... 😢";
+    promptBox.style.marginTop = "20px";
+    promptBox.style.color = "#ff6b9a";
+    situpOverlay.appendChild(promptBox);
+
+    // Second sad line
+    const promptBo = document.createElement("h3");
+    promptBo.textContent = "Pag Dukhai che... 😢";
+    promptBo.style.marginTop = "10px";
+    promptBo.style.color = "#ff6b9a";
+    situpOverlay.appendChild(promptBo);
+
+    // wait 3 seconds then continue sit-ups
+    setTimeout(() => {
+        promptBox.remove();
+        promptBo.remove(); // remove both lines
+        startSitUps(); // continue counting
+    }, 8000);
+}
+
+
+        if (count >= 100) clearInterval(interval); // stop at 100
+      }, 1500); // 150ms per sit-up
+    };
+
+    startSitUps(); // start the sit-ups
+  }, 10000); // 15 seconds delay to read message
+  }
+  </script>
+</body>
+</html>
